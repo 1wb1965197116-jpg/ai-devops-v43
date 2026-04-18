@@ -1,46 +1,44 @@
 const express = require("express");
-const { runAI } = require("../core/orchestrator");
-
 const router = express.Router();
 
-router.post("/run", async (req, res) => {
-  const result = await runAI();
-  res.json(result);
-});
-
-module.exports = router;
 const Task = require("../models/Task");
 const Log = require("../models/Log");
+const { runAI } = require("../core/orchestrator");
 
 let lastPRs = [];
 let deployStatus = { status: "idle" };
 
-// ---------------- TASKS
+// RUN AI
+router.post("/run", async (req, res) => {
+  const result = await runAI();
+
+  await Log.create({
+    message: "AI run executed"
+  });
+
+  res.json(result);
+});
+
+// TASKS
 router.get("/tasks", async (req, res) => {
   const tasks = await Task.find();
   res.json(tasks);
 });
 
-// ---------------- LOGS
+// LOGS
 router.get("/logs", async (req, res) => {
   const logs = await Log.find().sort({ time: -1 }).limit(50);
   res.json(logs);
 });
 
-// ---------------- PR STATUS
+// PR STATUS
 router.get("/prs", (req, res) => {
   res.json(lastPRs);
 });
 
-// ---------------- DEPLOY STATUS
+// DEPLOY STATUS
 router.get("/deploy-status", (req, res) => {
-  res.json(const Log = require("../models/Log");
-
-await Log.create({
-  message: "AI run executed"
+  res.json(deployStatus);
 });
-const Log = require("../models/Log");
 
-await Log.create({
-  message: "AI run executed"
-});
+module.exports = router;
