@@ -1,17 +1,23 @@
 const Task = require("../models/Task");
 const { processQueue } = require("./queue");
+const { createPR } = require("./githubEngine");
+const { deployRender } = require("./deploy");
 
 async function runAI() {
 
-  await Task.create({
-    type: "feature",
-    name: "fix login bug",
-    status: "pending"
-  });
+  const tasks = await Task.find({ status: "pending" });
 
-  const result = await processQueue();
+  const processed = await processQueue();
 
-  return result;
+  // simulate PR + deploy
+  if (processed.length > 0) {
+
+    await createPR("YOUR_USER/YOUR_REPO", "ai-update-branch");
+
+    await deployRender();
+  }
+
+  return processed;
 }
 
 module.exports = { runAI };
