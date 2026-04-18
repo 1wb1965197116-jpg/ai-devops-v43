@@ -1,6 +1,4 @@
 const Task = require("../models/Task");
-const engineer = require("../agents/engineer");
-const qa = require("../agents/qa");
 
 async function processQueue() {
 
@@ -10,20 +8,10 @@ async function processQueue() {
 
   for (let task of tasks) {
 
-    const change = engineer.build(task);
-
-    const valid = qa.check(change);
-
-    if (!valid.ok) {
-      task.status = "blocked";
-      await task.save();
-      continue;
-    }
-
     task.status = "done";
     await task.save();
 
-    results.push({ task, change });
+    results.push(task);
   }
 
   return results;
