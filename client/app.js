@@ -1,5 +1,5 @@
-// ===== CORE DASHBOARD =====
-e
+// ================= CORE DASHBOARD =================
+
 async function runAI() {
   await fetch("/ai/run", { method: "POST" });
   loadAll();
@@ -17,7 +17,7 @@ async function loadAll() {
     JSON.stringify(l, null, 2);
 }
 
-// ===== COMMAND CONSOLE =====
+// ================= COMMAND CONSOLE =================
 
 async function sendCommand() {
 
@@ -36,13 +36,12 @@ async function sendCommand() {
     JSON.stringify(data, null, 2);
 }
 
-// ===== TOKEN SYSTEM (CLIENT VIEW ONLY) =====
+// ================= TOKEN SYSTEM =================
 
 let tokens = [];
 
 function saveToken() {
-  const val = document.getElementById("tokenInput").value;
-  tokens.push(val);
+  tokens.push(document.getElementById("tokenInput").value);
   renderTokens();
 }
 
@@ -56,25 +55,23 @@ function renderTokens() {
     JSON.stringify(tokens, null, 2);
 }
 
-// ===== COPY / PASTE AI =====
+// ================= COPY / PASTE =================
 
 let storedValue = "";
 
 function copyValue() {
   storedValue = document.getElementById("copyInput").value;
-
-  document.getElementById("cpStatus").innerText =
-    "✅ Copied";
+  document.getElementById("cpStatus").innerText = "Copied";
 }
 
 function pasteValue() {
   const target = document.getElementById("targetInput").value;
 
   document.getElementById("cpStatus").innerText =
-    `📌 Target: ${target}\nValue: ${storedValue}\nStatus: READY`;
+    `Target: ${target}\nValue: ${storedValue}`;
 }
 
-// ===== CAMERA =====
+// ================= CAMERA =================
 
 let stream;
 
@@ -83,18 +80,16 @@ async function startCamera() {
     stream = await navigator.mediaDevices.getUserMedia({ video: true });
     document.getElementById("camera").srcObject = stream;
   } catch (e) {
-    alert("Camera access denied or not available");
+    alert("Camera not available");
   }
 }
 
 function stopCamera() {
-  if (stream) {
-    stream.getTracks().forEach(track => track.stop());
-  }
+  if (stream) stream.getTracks().forEach(t => t.stop());
 }
 
-// AUTO LOAD
-loadAll();
+// ================= BRIDGE =================
+
 async function sendToBrowserPaste(selector, value) {
 
   await fetch("/ai/bridge/send", {
@@ -107,5 +102,8 @@ async function sendToBrowserPaste(selector, value) {
     })
   });
 
-  alert("Command sent to browser");
+  alert("Sent to browser bridge");
 }
+
+// AUTO LOAD
+loadAll();
