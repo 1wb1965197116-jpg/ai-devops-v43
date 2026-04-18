@@ -1,5 +1,5 @@
 // ===== CORE DASHBOARD =====
-
+e
 async function runAI() {
   await fetch("/ai/run", { method: "POST" });
   loadAll();
@@ -95,3 +95,17 @@ function stopCamera() {
 
 // AUTO LOAD
 loadAll();
+async function sendToBrowserPaste(selector, value) {
+
+  await fetch("/ai/bridge/send", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "paste",
+      selector,
+      value
+    })
+  });
+
+  alert("Command sent to browser");
+}
