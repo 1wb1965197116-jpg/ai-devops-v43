@@ -21,3 +21,16 @@ async function runAI() {
 }
 
 module.exports = { runAI };
+const Task = require("../models/Task");
+const { processQueue } = require("./queue");
+
+async function runAI() {
+
+  const tasks = await Task.find({ status: "pending" });
+
+  const processed = await processQueue();
+
+  return processed;
+}
+
+module.exports = { runAI };
