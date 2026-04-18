@@ -22,19 +22,32 @@
 
 <hr>
 
+<h2>🧠 AI Command Console</h2>
+
+<input id="cmd" placeholder="Type command (ex: store token, send to render)">
+<input id="cmdValue" placeholder="Optional value (API key, etc)">
+<button onclick="sendCommand()">Execute</button>
+
+<pre id="cmdOut"></pre>
+
+<hr>
+
 <h2>🔐 Token Manager</h2>
+
 <input id="tokenInput" placeholder="Paste API Key">
 <button onclick="saveToken()">Save</button>
 <button onclick="clearTokens()">Delete All</button>
+
 <pre id="tokens"></pre>
 
 <hr>
 
-<h2>📋 Copy/Paste AI</h2>
+<h2>📋 Copy / Paste AI</h2>
+
 <input id="copyInput" placeholder="Paste value to copy">
 <button onclick="copyValue()">Copy</button>
 
-<input id="targetInput" placeholder="Where to paste (Render / Mongo / etc)">
+<input id="targetInput" placeholder="Target (Render / Mongo / etc)">
 <button onclick="pasteValue()">Paste</button>
 
 <pre id="cpStatus"></pre>
@@ -42,6 +55,7 @@
 <hr>
 
 <h2>📷 Camera Scanner</h2>
+
 <video id="camera" width="300" autoplay></video><br>
 <button onclick="startCamera()">Start Camera</button>
 <button onclick="stopCamera()">Stop Camera</button>
