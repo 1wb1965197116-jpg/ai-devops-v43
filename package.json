@@ -1,6 +1,7 @@
 {
   "name": "ai-devops-final",
   "version": "1.0.0",
+  "description": "AI DevOps Command Center",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js"
