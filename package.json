@@ -1,16 +1,14 @@
 {
-  "name": "ai-devops-v43",
+  "name": "ai-devops-final",
   "version": "1.0.0",
   "main": "server/server.js",
   "scripts": {
     "start": "node server/server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "express": "^0.00.2",
     "mongoose": "^7.0.0",
-    "jsonwebtoken": "^9.0.0",
-    "bcrypt": "^5.1.0",
-    "node-fetch": "^2.6.7",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "node-cron": "^3.0.2"
   }
 }
