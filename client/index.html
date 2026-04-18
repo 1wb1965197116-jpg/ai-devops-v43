@@ -24,8 +24,8 @@
 
 <h2>🧠 AI Command Console</h2>
 
-<input id="cmd" placeholder="Type command (ex: store token, send to render)">
-<input id="cmdValue" placeholder="Optional value (API key, etc)">
+<input id="cmd" placeholder="Command">
+<input id="cmdValue" placeholder="Value">
 <button onclick="sendCommand()">Execute</button>
 
 <pre id="cmdOut"></pre>
@@ -34,9 +34,9 @@
 
 <h2>🔐 Token Manager</h2>
 
-<input id="tokenInput" placeholder="Paste API Key">
+<input id="tokenInput">
 <button onclick="saveToken()">Save</button>
-<button onclick="clearTokens()">Delete All</button>
+<button onclick="clearTokens()">Clear</button>
 
 <pre id="tokens"></pre>
 
@@ -44,21 +44,33 @@
 
 <h2>📋 Copy / Paste AI</h2>
 
-<input id="copyInput" placeholder="Paste value to copy">
+<input id="copyInput">
 <button onclick="copyValue()">Copy</button>
 
-<input id="targetInput" placeholder="Target (Render / Mongo / etc)">
+<input id="targetInput">
 <button onclick="pasteValue()">Paste</button>
 
 <pre id="cpStatus"></pre>
 
 <hr>
 
-<h2>📷 Camera Scanner</h2>
+<h2>📷 Camera</h2>
 
 <video id="camera" width="300" autoplay></video><br>
-<button onclick="startCamera()">Start Camera</button>
-<button onclick="stopCamera()">Stop Camera</button>
+<button onclick="startCamera()">Start</button>
+<button onclick="stopCamera()">Stop</button>
+
+<hr>
+
+<h2>🌉 Browser Bridge</h2>
+
+<input id="selector" placeholder="CSS selector">
+<input id="value" placeholder="Value">
+
+<button onclick="sendToBrowserPaste(
+  document.getElementById('selector').value,
+  document.getElementById('value').value
+)">Send Paste</button>
 
 <script src="app.js"></script>
 
