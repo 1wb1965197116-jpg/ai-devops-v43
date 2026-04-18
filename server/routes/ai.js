@@ -1,78 +1,75 @@
 const express = require("express");
 const router = express.Router();
 
+const mongoose = require("mongoose");
+
 const Task = require("../models/Task");
 const Log = require("../models/Log");
 const { runAI } = require("../core/orchestrator");
 
-// ===== SIMPLE IN-MEMORY TOKEN VAULT =====
+// ===== TOKEN VAULT =====
 let vault = {};
 
-// ===== COMMAND ROUTER =====
+// ===== BRIDGE STATE =====
+let latestBridgeCommand = null;
+
+// ==========================
+// AI COMMAND ROUTER
+// ==========================
 router.post("/command", async (req, res) => {
 
-  const { command, value } = req.body;
+  const { command, value } = req.body || {};
+  const text = (command || "").toLowerCase();
 
   let result = "Unknown command";
 
-  const text = (command || "").toLowerCase();
-
   try {
 
-    // STORE TOKEN
     if (text.includes("store token")) {
       vault["GENERIC"] = value;
-      result = "✅ Token stored";
+      result = "Token stored";
     }
 
-    // CLEAR TOKENS
     else if (text.includes("clear tokens")) {
       vault = {};
-      result = "🧹 Vault cleared";
+      result = "Vault cleared";
     }
 
-    // INIT MONGO
     else if (text.includes("init mongo")) {
 
-      const mongoose = require("mongoose");
+      if (!process.env.MONGO_URI) {
+        return res.json({ result: "Missing MONGO_URI" });
+      }
 
       await mongoose.connect(process.env.MONGO_URI);
 
       const Test = mongoose.model("Init", { name: String });
       await Test.create({ name: "init" });
 
-      result = "✅ Mongo initialized";
+      result = "Mongo initialized";
     }
 
-    // SEND TO RENDER (SIMULATED)
     else if (text.includes("render")) {
 
       const val = vault["GENERIC"];
 
-      if (!val) {
-        result = "❌ No token stored";
-      } else {
-        result = {
-          status: "SIMULATED",
-          action: "Render ENV SET",
-          key: "API_KEY",
-          value: val
-        };
-      }
+      result = val
+        ? { status: "SIMULATED", key: "API_KEY", value: val }
+        : "No token stored";
     }
 
   } catch (err) {
-    result = "❌ Error: " + err.message;
+    result = "Error: " + err.message;
   }
 
   res.json({ result });
 });
 
-// ===== CORE ROUTES =====
-
+// ==========================
+// CORE ROUTES
+// ==========================
 router.post("/run", async (req, res) => {
-  const result = await runAI();
-  res.json(result);
+  res.json(await runAI());
 });
 
 router.get("/tasks", async (req, res) => {
@@ -83,16 +80,16 @@ router.get("/logs", async (req, res) => {
   res.json(await Log.find().sort({ time: -1 }).limit(50));
 });
 
-module.exports = router;
-let latestBridgeCommand = null;
-
-// SEND COMMAND TO BROWSER
+// ==========================
+// BROWSER BRIDGE
+// ==========================
 router.post("/bridge/send", (req, res) => {
   latestBridgeCommand = req.body;
   res.json({ status: "sent" });
 });
 
-// TAMPERMONKEY POLL
 router.get("/bridge", (req, res) => {
   res.json(latestBridgeCommand || {});
 });
+
+module.exports = router;
