@@ -1,16 +1,49 @@
-client/index.html
-<h2>AI DevOps Command Center</h2>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>AI DevOps Pro Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 
-<button onclick="runAI()">Run AI</button>
+<body>
 
-<pre id="out"></pre>
+<h1>🧠 AI DevOps Command Center</h1>
+
+<div class="controls">
+  <button onclick="runAI()">▶ Run AI</button>
+  <button onclick="deploy()">🚀 Deploy</button>
+  <button onclick="loadAll()">🔄 Refresh</button>
+</div>
+
+<div class="grid">
+
+  <div class="card">
+    <h3>📋 Tasks</h3>
+    <pre id="tasks"></pre>
+  </div>
+
+  <div class="card">
+    <h3>📊 Logs</h3>
+    <pre id="logs"></pre>
+  </div>
+
+  <div class="card">
+    <h3>🌿 PR Status</h3>
+    <pre id="prs"></pre>
+  </div>
+
+  <div class="card">
+    <h3>🚀 Deploy Status</h3>
+    <pre id="deploy"></pre>
+  </div>
+
+</div>
 
 <script src="app.js"></script>
-s<h2>AI DevOps v44</h2>
 
-<button onclick="runAI()">Run AI</button>
-<button onclick="deploy()">Deploy</button>
+</body>
+</html>
 
-<pre id="out"></pre>
 
-<script src="app.js"></script>
+
+
