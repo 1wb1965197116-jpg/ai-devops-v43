@@ -1,37 +1,16 @@
 body {
-  background: #0f1117;
-  color: #fff;
+  background: #111;
+  color: white;
   font-family: Arial;
   padding: 20px;
 }
 
-h1 {
-  margin-bottom: 20px;
-}
-
-.controls button {
+button {
   margin-right: 10px;
   padding: 10px;
-  background: #1f6feb;
-  border: none;
-  color: white;
-  cursor: pointer;
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 15px;
-  margin-top: 20px;
-}
-
-.card {
-  background: #161b22;
-  padding: 15px;
-  border-radius: 8px;
 }
 
 pre {
-  font-size: 12px;
-  overflow: auto;
+  background: #222;
+  padding: 10px;
 }
