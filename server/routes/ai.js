@@ -4,8 +4,11 @@ const mongoose = require("mongoose");
 
 const Task = require("../models/Task");
 const Log = require("../models/Log");
-const { runAI } = require("../core/orchestrator");
 
+// ✅ ONLY IMPORT ONCE (TOP)
+const { runAICommand, runAI } = require("../core/orchestrator");
+
+// ===== STATE =====
 let vault = {};
 let latestBridgeCommand = null;
 
@@ -15,10 +18,11 @@ router.post("/command", async (req, res) => {
   const { command, value } = req.body || {};
   const text = (command || "").toLowerCase();
 
-  let result = "Unknown command";
+  let result;
 
   try {
 
+    // ===== SAFE LOCAL COMMANDS =====
     if (text.includes("store token")) {
       vault["GENERIC"] = value;
       result = "Token stored";
@@ -31,8 +35,9 @@ router.post("/command", async (req, res) => {
 
     else if (text.includes("init mongo")) {
 
-      if (!process.env.MONGO_URI)
+      if (!process.env.MONGO_URI) {
         return res.json({ result: "Missing MONGO_URI" });
+      }
 
       await mongoose.connect(process.env.MONGO_URI);
 
@@ -42,11 +47,9 @@ router.post("/command", async (req, res) => {
       result = "Mongo initialized";
     }
 
-    else if (text.includes("render")) {
-      const val = vault["GENERIC"];
-      result = val
-        ? { status: "SIMULATED", key: "API_KEY", value: val }
-        : "No token stored";
+    // ===== AI COMMANDS =====
+    else {
+      result = await runAICommand(command || "");
     }
 
   } catch (err) {
