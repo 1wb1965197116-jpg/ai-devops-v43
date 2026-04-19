@@ -1,140 +1,137 @@
-const fetch = require("node-fetch");
+// NO node-fetch needed
 
-// ===== HELPERS =====
-function extractKV(text) {
-  // matches KEY=VALUE pairs
-  const m = text.match(/([A-Z0-9_]+)\s*=\s*([^\s]+)/i);
-  if (!m) return null;
-  return { key: m[1], value: m[2] };
+// ===== STEP PARSER =====
+function splitSteps(command) {
+  return command
+    .split(/then|and/i)
+    .map(s => s.trim())
+    .filter(Boolean);
 }
 
-// ===== OPENAI PARSER =====
-async function parseCommandNL(command) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    // fallback basic rules if key missing
-    return { action: "unknown", raw: command };
+// ===== SIMPLE RULE PARSER =====
+function classifyStep(step) {
+  const s = step.toLowerCase();
+
+  if (s.includes("deploy")) return { action: "deploy_render" };
+  if (s.includes("push")) return { action: "push_github" };
+
+  if (s.includes("update env")) {
+    const match = step.match(/([A-Z0-9_]+)\s*=\s*(.+)/i);
+    if (match) {
+      return {
+        action: "update_env",
+        key: match[1],
+        value: match[2]
+      };
+    }
+    return { action: "update_env" };
   }
 
-  const prompt = `
-You are an automation parser.
-Convert the user's command into JSON.
-
-Supported actions:
-- deploy_render
-- push_github
-- update_env
-- unknown
-
-Return JSON only:
-{ "action": "...", "key": "...", "value": "..." }
-
-Command: "${command}"
-`;
-
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${apiKey}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: [{ role: "user", content: prompt }],
-      temperature: 0
-    })
-  });
-
-  const data = await res.json();
-  const text = data.choices?.[0]?.message?.content || "{}";
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    return { action: "unknown", raw: command };
-  }
+  return { action: "unknown", raw: step };
 }
 
 // ===== ACTIONS =====
 
-// Render: trigger deploy (simple example via service restart or API)
 async function deployRender() {
   const key = process.env.RENDER_API_KEY;
-  if (!key) return { error: "Missing RENDER_API_KEY" };
-
-  // NOTE: Replace SERVICE_ID with your real one
   const SERVICE_ID = process.env.RENDER_SERVICE_ID;
 
-  if (!SERVICE_ID) {
-    return { error: "Missing RENDER_SERVICE_ID" };
-  }
+  if (!key || !SERVICE_ID)
+    return { error: "Missing Render config" };
 
-  const res = await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/deploys`, {
+  await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/deploys`, {
     method: "POST",
     headers: {
-      "Authorization": `Bearer ${key}`,
-      "Content-Type": "application/json"
+      Authorization: `Bearer ${key}`
     }
   });
 
   return { status: "deploy_triggered" };
 }
 
-// GitHub: push (basic commit example)
 async function pushGitHub() {
-  const token = process.env.GITHUB_TOKEN;
-  if (!token) return { error: "Missing GITHUB_TOKEN" };
-
-  // This is a placeholder — real push requires repo + file changes
   return { status: "github_push_simulated" };
 }
 
-// Render ENV update
-async function updateEnv(keyName, value) {
+async function updateEnv(key, value) {
   const apiKey = process.env.RENDER_API_KEY;
   const SERVICE_ID = process.env.RENDER_SERVICE_ID;
 
-  if (!apiKey || !SERVICE_ID) {
+  if (!apiKey || !SERVICE_ID)
     return { error: "Missing Render config" };
-  }
 
-  const res = await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/env-vars`, {
+  await fetch(`https://api.render.com/v1/services/${SERVICE_ID}/env-vars`, {
     method: "PUT",
     headers: {
-      "Authorization": `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify([
-      { key: keyName, value }
-    ])
+    body: JSON.stringify([{ key, value }])
   });
 
-  return { status: "env_updated", key: keyName };
+  return { status: "env_updated", key };
 }
 
-// ===== MAIN =====
-async function runAICommand(command) {
+// ===== EXECUTOR =====
 
-  const parsed = await parseCommandNL(command);
+async function executeStep(stepObj) {
 
-  if (parsed.action === "deploy_render") {
+  if (stepObj.action === "deploy_render") {
     return await deployRender();
   }
 
-  if (parsed.action === "push_github") {
+  if (stepObj.action === "push_github") {
     return await pushGitHub();
   }
 
-  if (parsed.action === "update_env") {
-    if (!parsed.key || !parsed.value) {
-      const kv = extractKV(command);
-      if (kv) return await updateEnv(kv.key, kv.value);
-      return { error: "Missing KEY=VALUE" };
+  if (stepObj.action === "update_env") {
+    if (!stepObj.key || !stepObj.value) {
+      return { error: "Missing key/value" };
     }
-    return await updateEnv(parsed.key, parsed.value);
+    return await updateEnv(stepObj.key, stepObj.value);
   }
 
-  return { status: "unknown_command", parsed };
+  return { status: "unknown_step", step: stepObj };
+}
+
+// ===== MAIN WORKFLOW =====
+
+async function runAICommand(command) {
+
+  const steps = splitSteps(command);
+
+  let results = [];
+
+  for (let step of steps) {
+
+    const parsed = classifyStep(step);
+
+    let attempts = 0;
+    let success = false;
+    let result;
+
+    while (attempts < 2 && !success) {
+      try {
+        result = await executeStep(parsed);
+
+        if (!result.error) success = true;
+        else attempts++;
+
+      } catch (e) {
+        attempts++;
+        result = { error: e.message };
+      }
+    }
+
+    results.push({
+      step,
+      result
+    });
+  }
+
+  return {
+    workflow: results
+  };
 }
 
 module.exports = { runAICommand };
